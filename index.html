@@ -88,17 +88,11 @@
       </div>
 
       <form id="subzipForm" class="space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Cluster *</label>
-            <input type="text" id="nama_cluster" required placeholder="Contoh: CLUSTER BANTEN 1"
-              class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Cabang (Penginput) *</label>
-            <input type="text" id="nama_cabang" required placeholder="Contoh: CABANG SERANG"
-              class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
-          </div>
+        <!-- ID Cabang -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">ID Cabang *</label>
+          <input type="text" id="id_cabang" required placeholder="Contoh: 0102 / CBG-SRG"
+            class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -133,33 +127,49 @@
           <div>
             <label class="block text-xs font-bold text-blue-900 mb-1.5">Zipcode Seharusnya *</label>
             <input type="text" id="zipcode_seharusnya" required maxlength="5" placeholder="14872"
+              oninput="checkShowOpsiPengajuan()"
               class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
           </div>
           <div>
             <label class="block text-xs font-bold text-blue-900 mb-1.5">No. Dusun / No. RW Seharusnya *</label>
             <input type="text" id="subzip_seharusnya" required placeholder="Contoh: Dusun 02 / RW 005"
+              oninput="checkShowOpsiPengajuan()"
               class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
           </div>
         </div>
 
-        <!-- Checkbox Milik Cabang Lain -->
-        <div class="pt-1">
-          <label class="inline-flex items-center gap-3 cursor-pointer select-none bg-amber-50 border border-amber-200 px-4 py-3 rounded-xl w-full hover:bg-amber-100/60 transition">
-            <input type="checkbox" id="milik_cabang_lain" onchange="toggleCabangLain()"
-              class="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500">
-            <div>
-              <span class="text-sm font-bold text-amber-900 block">Milik Cabang Lain (Beda Coverage)</span>
-              <span class="text-[11px] text-amber-700">Centang jika Zipcode & No. Dusun / RW ini masuk ke area coverage cabang lain.</span>
-            </div>
-          </label>
+        <!-- 2 Opsi Dinamis Muncul Setelah Zipcode & No. Dusun/RW Seharusnya Diisi -->
+        <div id="boxOpsiPengajuan" class="hidden space-y-3 pt-1">
+          <label class="block text-xs font-bold text-slate-800">Pilih Jenis Pengajuan Mapping *</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Opsi 1: Penambahan Wilayah Survey -->
+            <label class="flex items-start gap-3 cursor-pointer select-none bg-blue-50/70 border border-blue-200 p-3.5 rounded-xl hover:bg-blue-100/60 transition">
+              <input type="radio" name="jenis_pengajuan" value="PENAMBAHAN_WILAYAH" onchange="handleOpsiPengajuan()"
+                class="mt-0.5 w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+              <div>
+                <span class="text-sm font-bold text-blue-900 block">Penambahan Wilayah Survey</span>
+                <span class="text-[11px] text-blue-700">Area masih masuk coverage cabang ini.</span>
+              </div>
+            </label>
+
+            <!-- Opsi 2: Loncat Cabang -->
+            <label class="flex items-start gap-3 cursor-pointer select-none bg-amber-50/70 border border-amber-200 p-3.5 rounded-xl hover:bg-amber-100/60 transition">
+              <input type="radio" name="jenis_pengajuan" value="LONCAT_CABANG" onchange="handleOpsiPengajuan()"
+                class="mt-0.5 w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500">
+              <div>
+                <span class="text-sm font-bold text-amber-900 block">Loncat Cabang</span>
+                <span class="text-[11px] text-amber-700">Area masuk coverage cabang lain.</span>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <!-- Box Dinamis Nama Cabang Pemilik -->
+        <!-- Box Dinamis Nama Cabang (Hanya Muncul Jika Memilih Loncat Cabang) -->
         <div id="boxCabangLain" class="hidden bg-amber-50/70 border border-amber-300 rounded-xl p-4 transition-all">
-          <label class="block text-xs font-bold text-amber-900 mb-1.5">Nama Cabang yang Cover Seharusnya *</label>
-          <input type="text" id="cabang_pemilik_seharusnya" placeholder="Masukkan nama cabang pemilik coverage sebenarnya"
+          <label class="block text-xs font-bold text-amber-900 mb-1.5">Nama Cabang Tujuan / Pemilik *</label>
+          <input type="text" id="cabang_pemilik_seharusnya" placeholder="Masukkan nama cabang yang meng-cover area ini"
             class="w-full px-3.5 py-2.5 text-sm bg-white border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 uppercase">
-          <p class="text-[11px] text-amber-800 mt-1.5">Nama cabang ini akan otomatis ditampilkan di halaman report sebagai pemilik sah area tersebut.</p>
+          <p class="text-[11px] text-amber-800 mt-1.5">Nama cabang ini akan otomatis ditampilkan di halaman report sebagai tujuan loncat cabang.</p>
         </div>
 
         <div class="pt-3 flex flex-col sm:flex-row gap-3">
@@ -194,7 +204,7 @@
           <h2 class="text-lg font-bold text-slate-800">Dashboard Report & Grafik Mapping Area</h2>
           <span class="text-[11px] bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full">Publik / Live</span>
         </div>
-        <p class="text-xs text-slate-500 mt-0.5">Rekapitulasi seluruh cabang yang dapat diakses kapan saja melalui link halaman ini.</p>
+        <p class="text-xs text-slate-500 mt-0.5">Rekapitulasi seluruh ID Cabang yang dapat diakses kapan saja melalui link halaman ini.</p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
@@ -218,14 +228,14 @@
         <span class="text-[11px] text-slate-400">Total order terdata di sistem</span>
       </div>
       <div class="bg-white rounded-xl border border-blue-200 p-4 shadow-sm">
-        <span class="text-xs font-semibold text-blue-700 uppercase">Penambahan Area Internal</span>
+        <span class="text-xs font-semibold text-blue-700 uppercase">Penambahan Wilayah Survey</span>
         <div class="text-2xl font-extrabold text-blue-900 mt-1" id="kpiInternal">0</div>
         <span class="text-[11px] text-blue-600">Area coverage cabang sendiri</span>
       </div>
       <div class="bg-white rounded-xl border border-amber-200 p-4 shadow-sm">
-        <span class="text-xs font-semibold text-amber-700 uppercase">Milik Cabang Lain</span>
+        <span class="text-xs font-semibold text-amber-700 uppercase">Loncat Cabang</span>
         <div class="text-2xl font-extrabold text-amber-800 mt-1" id="kpiCross">0</div>
-        <span class="text-[11px] text-amber-600">Perlu dialihkan ke cabang pemilik</span>
+        <span class="text-[11px] text-amber-600">Dialihkan ke cabang tujuan</span>
       </div>
     </div>
 
@@ -234,8 +244,8 @@
       <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
         <div class="flex justify-between items-center mb-3">
           <div>
-            <h3 class="text-sm font-bold text-slate-800">Grafik Jumlah Pengajuan per Cabang</h3>
-            <p class="text-[11px] text-slate-500">Perbandingan penambahan area cabang sendiri vs milik cabang lain</p>
+            <h3 class="text-sm font-bold text-slate-800">Grafik Jumlah Pengajuan per ID Cabang</h3>
+            <p class="text-[11px] text-slate-500">Perbandingan penambahan wilayah survey vs loncat cabang</p>
           </div>
         </div>
         <div class="relative h-64 w-full">
@@ -245,8 +255,8 @@
 
       <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
         <div>
-          <h3 class="text-sm font-bold text-slate-800">Proporsi Status Coverage</h3>
-          <p class="text-[11px] text-slate-500">Persentase area internal vs cabang lain</p>
+          <h3 class="text-sm font-bold text-slate-800">Proporsi Status Pengajuan</h3>
+          <p class="text-[11px] text-slate-500">Persentase penambahan wilayah vs loncat cabang</p>
         </div>
         <div class="relative h-52 w-full flex items-center justify-center my-2">
           <canvas id="doughnutChartStatus"></canvas>
@@ -259,22 +269,22 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4 mb-4">
         <div>
-          <h3 class="text-base font-bold text-slate-800">Rincian Report per Cluster & Nama Cabang</h3>
-          <p class="text-xs text-slate-500">Menampilkan detail Zipcode, No. Dusun / No. RW seharusnya, serta keterangan cabang pemilik untuk area lintas cabang.</p>
+          <h3 class="text-base font-bold text-slate-800">Rincian Report per ID Cabang</h3>
+          <p class="text-xs text-slate-500">Menampilkan detail Zipcode, No. Dusun / No. RW seharusnya, serta keterangan cabang tujuan untuk loncat cabang.</p>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <input type="text" id="filterSearch" onkeyup="renderDashboard()" placeholder="Cari Cluster, Cabang, Zipcode, Dusun/RW..."
+          <input type="text" id="filterSearch" onkeyup="renderDashboard()" placeholder="Cari ID Cabang, Zipcode, Dusun/RW..."
             class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500">
           <select id="filterStatus" onchange="renderDashboard()"
             class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white">
             <option value="ALL">Semua Kategori</option>
-            <option value="INTERNAL">Penambahan Area Cabang Sendiri</option>
-            <option value="CROSS">Milik Cabang Lain</option>
+            <option value="INTERNAL">Penambahan Wilayah Survey</option>
+            <option value="CROSS">Loncat Cabang</option>
           </select>
         </div>
       </div>
 
-      <!-- Grid Kartu Detail per Cluster & Cabang -->
+      <!-- Grid Kartu Detail per ID Cabang -->
       <div id="reportContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="col-span-full text-center py-8 text-sm text-slate-400">Memuat data report...</div>
       </div>
@@ -288,11 +298,11 @@
           <thead>
             <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
               <th class="p-3 font-semibold">Waktu Input</th>
-              <th class="p-3 font-semibold">Cluster & Cabang</th>
+              <th class="p-3 font-semibold">ID Cabang</th>
               <th class="p-3 font-semibold">Order & Calon Anggota</th>
               <th class="p-3 font-semibold">Zipcode (Awal &rarr; Seharusnya)</th>
               <th class="p-3 font-semibold">Subzip Awal &rarr; No. Dusun / RW Seharusnya</th>
-              <th class="p-3 font-semibold">Status & Cabang Pemilik</th>
+              <th class="p-3 font-semibold">Kategori & Cabang Tujuan</th>
             </tr>
           </thead>
           <tbody id="rawTableBody" class="divide-y divide-slate-100">
@@ -310,7 +320,7 @@
     // KONFIGURASI URL GOOGLE APPS SCRIPT WEB APP
     // =========================================================================
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmA4gmoO3D_lV0ZJ_dR5j5FbC8JJd8AQJtvkHvW1JiMV3nzHJ-iYF1KzYHBPUHyl1xow/exec";
-    const LOCAL_STORAGE_KEY = "ksp_subzip_records_v1";
+    const LOCAL_STORAGE_KEY = "ksp_subzip_records_v2";
 
     let allRecords = [];
     let barChartInstance = null;
@@ -357,17 +367,37 @@
       }
     });
 
-    // Toggle tampilan box input cabang pemilik
-    function toggleCabangLain() {
-      const isChecked = document.getElementById("milik_cabang_lain").checked;
-      const box = document.getElementById("boxCabangLain");
+    // Munculkan 2 opsi (Penambahan Wilayah Survey vs Loncat Cabang) setelah Zipcode & Subzip Seharusnya diisi
+    function checkShowOpsiPengajuan() {
+      const zipVal = document.getElementById("zipcode_seharusnya").value.trim();
+      const subzipVal = document.getElementById("subzip_seharusnya").value.trim();
+      const boxOpsi = document.getElementById("boxOpsiPengajuan");
+      const radios = document.querySelectorAll('input[name="jenis_pengajuan"]');
+
+      if (zipVal.length > 0 && subzipVal.length > 0) {
+        boxOpsi.classList.remove("hidden");
+        radios.forEach(r => r.setAttribute("required", "true"));
+      } else {
+        boxOpsi.classList.add("hidden");
+        radios.forEach(r => {
+          r.removeAttribute("required");
+          r.checked = false;
+        });
+        handleOpsiPengajuan();
+      }
+    }
+
+    // Toggle tampilan text box Nama Cabang jika memilih Loncat Cabang
+    function handleOpsiPengajuan() {
+      const selected = document.querySelector('input[name="jenis_pengajuan"]:checked');
+      const boxCabang = document.getElementById("boxCabangLain");
       const inputPemilik = document.getElementById("cabang_pemilik_seharusnya");
 
-      if (isChecked) {
-        box.classList.remove("hidden");
+      if (selected && selected.value === "LONCAT_CABANG") {
+        boxCabang.classList.remove("hidden");
         inputPemilik.setAttribute("required", "true");
       } else {
-        box.classList.add("hidden");
+        boxCabang.classList.add("hidden");
         inputPemilik.removeAttribute("required");
         inputPemilik.value = "";
       }
@@ -420,17 +450,17 @@
             const dusunRwSeharusnya = String(
               item["No Dusun / No RW Seharusnya"] || item["Subzip Seharusnya"] || ""
             ).replace(/^'/, "").toUpperCase();
+            const isLoncat = item["Milik Cabang Lain"] === "Ya" || item["Jenis Pengajuan"] === "LONCAT_CABANG";
             return {
               timestamp: item["Timestamp"] || "",
-              nama_cabang: (item["Nama Cabang"] || "").toUpperCase(),
-              nama_cluster: (item["Nama Cluster"] || "").toUpperCase(),
+              id_cabang: (item["ID Cabang"] || item["Nama Cabang"] || "").toUpperCase(),
               nomor_order: String(item["Nomor Order"] || "").replace(/^'/, ""),
               nama_calon_anggota: (item["Nama Calon Anggota"] || "").toUpperCase(),
               zipcode: zipAwal,
               zipcode_seharusnya: zipSeharusnya,
               subzip: String(item["Subzip Saat Ini"] || "").replace(/^'/, ""),
               subzip_seharusnya: dusunRwSeharusnya,
-              milik_cabang_lain: item["Milik Cabang Lain"] === "Ya",
+              loncat_cabang: isLoncat,
               cabang_pemilik_seharusnya: (item["Cabang Pemilik Seharusnya"] || "-").toUpperCase()
             };
           });
@@ -449,25 +479,35 @@
     // Submit form ke Google Sheets & Local Storage
     document.getElementById("subzipForm").addEventListener("submit", async function(e) {
       e.preventDefault();
+      const selectedOpsi = document.querySelector('input[name="jenis_pengajuan"]:checked');
+      if (!selectedOpsi) {
+        alert("Silakan pilih opsi Penambahan Wilayah Survey atau Loncat Cabang terlebih dahulu.");
+        return;
+      }
+
       const btn = document.getElementById("btnSubmit");
       btn.disabled = true;
       btn.innerHTML = "<span>Menyimpan Data...</span>";
 
-      const isCross = document.getElementById("milik_cabang_lain").checked;
+      const isLoncat = selectedOpsi.value === "LONCAT_CABANG";
+      const idCabangVal = document.getElementById("id_cabang").value.trim().toUpperCase();
+      const cabangTujuanVal = isLoncat
+        ? document.getElementById("cabang_pemilik_seharusnya").value.trim().toUpperCase()
+        : "-";
+
       const newRecord = {
         timestamp: new Date().toLocaleString("id-ID"),
-        nama_cluster: document.getElementById("nama_cluster").value.trim().toUpperCase(),
-        nama_cabang: document.getElementById("nama_cabang").value.trim().toUpperCase(),
+        id_cabang: idCabangVal,
+        nama_cabang: idCabangVal, // Kompatibilitas dengan kolom Apps Script yang ada
         nomor_order: document.getElementById("nomor_order").value.trim().toUpperCase(),
         nama_calon_anggota: document.getElementById("nama_calon_anggota").value.trim().toUpperCase(),
         zipcode: document.getElementById("zipcode").value.trim(),
         zipcode_seharusnya: document.getElementById("zipcode_seharusnya").value.trim(),
         subzip: document.getElementById("subzip").value.trim(),
         subzip_seharusnya: document.getElementById("subzip_seharusnya").value.trim().toUpperCase(),
-        milik_cabang_lain: isCross,
-        cabang_pemilik_seharusnya: isCross
-          ? document.getElementById("cabang_pemilik_seharusnya").value.trim().toUpperCase()
-          : "-"
+        loncat_cabang: isLoncat,
+        milik_cabang_lain: isLoncat, // Kompatibilitas dengan kolom Apps Script yang ada
+        cabang_pemilik_seharusnya: cabangTujuanVal
       };
 
       allRecords.push(newRecord);
@@ -489,7 +529,7 @@
       }
 
       document.getElementById("subzipForm").reset();
-      toggleCabangLain();
+      checkShowOpsiPengajuan();
       btn.disabled = false;
       btn.innerHTML = "<span>Simpan Data ke Spreadsheet</span>";
 
@@ -500,16 +540,16 @@
 
     // Render Grafik Chart.js
     function updateCharts(filteredData, groupedData) {
-      const internalCount = filteredData.filter(d => !d.milik_cabang_lain).length;
-      const crossCount = filteredData.filter(d => d.milik_cabang_lain).length;
+      const internalCount = filteredData.filter(d => !d.loncat_cabang).length;
+      const crossCount = filteredData.filter(d => d.loncat_cabang).length;
 
       // Update KPI Cards
       document.getElementById("kpiTotal").textContent = filteredData.length;
       document.getElementById("kpiInternal").textContent = internalCount;
       document.getElementById("kpiCross").textContent = crossCount;
 
-      // 1. Bar Chart per Cabang
-      const labels = Object.values(groupedData).map(g => `${g.cabang} (${g.cluster})`);
+      // 1. Bar Chart per ID Cabang
+      const labels = Object.values(groupedData).map(g => `ID: ${g.id_cabang}`);
       const dataInternal = Object.values(groupedData).map(g => g.internalCount);
       const dataCross = Object.values(groupedData).map(g => g.crossCount);
 
@@ -522,13 +562,13 @@
           labels: labels.length ? labels : ["Belum Ada Data"],
           datasets: [
             {
-              label: "Penambahan Area Cabang Sendiri",
+              label: "Penambahan Wilayah Survey",
               data: dataInternal.length ? dataInternal : [0],
               backgroundColor: "#1d4ed8",
               borderRadius: 6
             },
             {
-              label: "Milik Cabang Lain",
+              label: "Loncat Cabang",
               data: dataCross.length ? dataCross : [0],
               backgroundColor: "#f59e0b",
               borderRadius: 6
@@ -555,7 +595,7 @@
       doughnutChartInstance = new Chart(ctxDoughnut, {
         type: "doughnut",
         data: {
-          labels: ["Cabang Sendiri", "Milik Cabang Lain"],
+          labels: ["Penambahan Wilayah Survey", "Loncat Cabang"],
           datasets: [{
             data: (internalCount === 0 && crossCount === 0) ? [1, 0] : [internalCount, crossCount],
             backgroundColor: (internalCount === 0 && crossCount === 0) ? ["#e2e8f0", "#e2e8f0"] : ["#1d4ed8", "#f59e0b"],
@@ -583,30 +623,28 @@
       const filtered = allRecords.filter(r => {
         const zipTarget = r.zipcode_seharusnya || r.zipcode;
         const matchText =
-          r.nama_cluster.includes(keyword) ||
-          r.nama_cabang.includes(keyword) ||
+          r.id_cabang.includes(keyword) ||
           r.zipcode.includes(keyword) ||
           zipTarget.includes(keyword) ||
           r.subzip_seharusnya.includes(keyword) ||
           r.cabang_pemilik_seharusnya.includes(keyword);
 
         if (!matchText) return false;
-        if (statusFilter === "INTERNAL" && r.milik_cabang_lain) return false;
-        if (statusFilter === "CROSS" && !r.milik_cabang_lain) return false;
+        if (statusFilter === "INTERNAL" && r.loncat_cabang) return false;
+        if (statusFilter === "CROSS" && !r.loncat_cabang) return false;
         return true;
       });
 
       document.getElementById("totalCount").textContent = filtered.length;
 
-      // Grouping Cluster & Cabang
+      // Grouping berdasarkan ID Cabang
       const grouped = {};
       filtered.forEach(item => {
         const zipTarget = item.zipcode_seharusnya || item.zipcode;
-        const key = `${item.nama_cluster}|||${item.nama_cabang}`;
+        const key = item.id_cabang;
         if (!grouped[key]) {
           grouped[key] = {
-            cluster: item.nama_cluster,
-            cabang: item.nama_cabang,
+            id_cabang: item.id_cabang,
             total: 0,
             internalCount: 0,
             crossCount: 0,
@@ -616,7 +654,7 @@
         }
         grouped[key].total += 1;
 
-        if (!item.milik_cabang_lain) {
+        if (!item.loncat_cabang) {
           grouped[key].internalCount += 1;
           const detailKey = `${item.zipcode}|${zipTarget}|${item.subzip_seharusnya}`;
           grouped[key].internalDetails[detailKey] = (grouped[key].internalDetails[detailKey] || 0) + 1;
@@ -649,7 +687,7 @@
               : `<strong>Zipcode ${zipSeharusnya}</strong>`;
             return `<li class="flex items-start gap-2 text-xs text-slate-700">
               <span class="text-blue-600 font-bold">•</span>
-              <span>Penambahan ${zipLabel} dengan <strong>No. Dusun / No. RW seharusnya ${dusunRwSeharusnya}</strong> <span class="text-slate-500">(${count} order)</span></span>
+              <span>Penambahan Wilayah Survey: ${zipLabel} dengan <strong>No. Dusun / No. RW seharusnya ${dusunRwSeharusnya}</strong> <span class="text-slate-500">(${count} order)</span></span>
             </li>`;
           }).join("");
 
@@ -661,7 +699,7 @@
             return `<li class="flex items-start gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 p-2.5 rounded-lg">
               <span class="text-amber-600 font-bold">⚠</span>
               <span>
-                <strong>Milik Cabang Lain:</strong> ${zipInfo} (Subzip input: ${subAwal} / No. Dusun / No. RW seharusnya: <strong>${dusunRwSeharusnya}</strong>) adalah area milik <strong>${pemilik}</strong> <span class="text-amber-700">(${count} order)</span>.
+                <strong>Loncat Cabang:</strong> ${zipInfo} (Subzip input: ${subAwal} / No. Dusun / No. RW seharusnya: <strong>${dusunRwSeharusnya}</strong>) &rarr; Tujuan Cabang: <strong>${pemilik}</strong> <span class="text-amber-700">(${count} order)</span>.
               </span>
             </li>`;
           }).join("");
@@ -671,11 +709,11 @@
               <div>
                 <div class="flex justify-between items-start border-b border-slate-200 pb-2.5 mb-3">
                   <div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded">${g.cluster}</span>
-                    <h4 class="text-sm font-bold text-slate-900 mt-1">${g.cabang}</h4>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded">ID CABANG</span>
+                    <h4 class="text-base font-bold text-slate-900 mt-1">${g.id_cabang}</h4>
                   </div>
                   <div class="text-right">
-                    <span class="text-[11px] text-slate-500 block">Total Ditambahkan</span>
+                    <span class="text-[11px] text-slate-500 block">Total Pengajuan</span>
                     <span class="text-lg font-extrabold text-blue-900">${g.total} <span class="text-xs font-normal text-slate-600">Data</span></span>
                   </div>
                 </div>
@@ -697,8 +735,7 @@
         <tr class="hover:bg-slate-50">
           <td class="p-3 text-[11px] text-slate-500 whitespace-nowrap">${r.timestamp}</td>
           <td class="p-3">
-            <div class="font-bold text-slate-800">${r.nama_cabang}</div>
-            <div class="text-[11px] text-slate-500">${r.nama_cluster}</div>
+            <div class="font-bold text-slate-800">${r.id_cabang}</div>
           </td>
           <td class="p-3">
             <div class="font-semibold text-blue-800">${r.nomor_order}</div>
@@ -711,9 +748,9 @@
             <div><span class="font-mono text-slate-500">${r.subzip}</span> &rarr; <strong class="text-emerald-700">${r.subzip_seharusnya}</strong></div>
           </td>
           <td class="p-3">
-            ${r.milik_cabang_lain
-              ? `<span class="inline-block bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md text-[11px]">Milik Cabang: ${r.cabang_pemilik_seharusnya}</span>`
-              : `<span class="inline-block bg-emerald-100 text-emerald-800 font-medium px-2.5 py-1 rounded-md text-[11px]">Cabang Sendiri</span>`
+            ${r.loncat_cabang
+              ? `<span class="inline-block bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md text-[11px]">Loncat Cabang: ${r.cabang_pemilik_seharusnya}</span>`
+              : `<span class="inline-block bg-blue-100 text-blue-800 font-medium px-2.5 py-1 rounded-md text-[11px]">Penambahan Wilayah Survey</span>`
             }
           </td>
         </tr>
@@ -736,21 +773,21 @@
       const grouped = {};
       allRecords.forEach(item => {
         const zipTarget = item.zipcode_seharusnya || item.zipcode;
-        const key = `${item.nama_cluster}|||${item.nama_cabang}`;
+        const key = item.id_cabang;
         if (!grouped[key]) {
-          grouped[key] = { cluster: item.nama_cluster, cabang: item.nama_cabang, total: 0, lines: [] };
+          grouped[key] = { id_cabang: item.id_cabang, total: 0, lines: [] };
         }
         grouped[key].total += 1;
-        if (!item.milik_cabang_lain) {
-          grouped[key].lines.push(`- Penambahan Zipcode seharusnya ${zipTarget} (awal: ${item.zipcode}) dengan No. Dusun / No. RW seharusnya ${item.subzip_seharusnya} (Order: ${item.nomor_order})`);
+        if (!item.loncat_cabang) {
+          grouped[key].lines.push(`- [PENAMBAHAN WILAYAH SURVEY] Zipcode seharusnya ${zipTarget} (awal: ${item.zipcode}) dengan No. Dusun / No. RW seharusnya ${item.subzip_seharusnya} (Order: ${item.nomor_order})`);
         } else {
-          grouped[key].lines.push(`- [MILIK CABANG LAIN] Zipcode seharusnya ${zipTarget} / No. Dusun / No. RW seharusnya ${item.subzip_seharusnya} adalah milik ${item.cabang_pemilik_seharusnya} (Order: ${item.nomor_order})`);
+          grouped[key].lines.push(`- [LONCAT CABANG] Zipcode seharusnya ${zipTarget} / No. Dusun / No. RW seharusnya ${item.subzip_seharusnya} -> Cabang Tujuan: ${item.cabang_pemilik_seharusnya} (Order: ${item.nomor_order})`);
         }
       });
 
       let text = "*REPORT MAPPING AREA & COVERAGE CABANG*\n\n";
       Object.values(grouped).forEach(g => {
-        text += `*Cluster:* ${g.cluster}\n*Cabang:* ${g.cabang}\n*Jumlah Total:* ${g.total}\n*Detail:*\n${g.lines.join("\n")}\n\n`;
+        text += `*ID Cabang:* ${g.id_cabang}\n*Jumlah Total:* ${g.total}\n*Detail:*\n${g.lines.join("\n")}\n\n`;
       });
 
       navigator.clipboard.writeText(text).then(() => {
@@ -764,16 +801,15 @@
       const rows = allRecords.map((r, idx) => ({
         "No": idx + 1,
         "Timestamp": r.timestamp,
-        "Nama Cluster": r.nama_cluster,
-        "Nama Cabang": r.nama_cabang,
+        "ID Cabang": r.id_cabang,
         "Nomor Order": r.nomor_order,
         "Nama Calon Anggota": r.nama_calon_anggota,
         "Zipcode Saat Ini": r.zipcode,
         "Zipcode Seharusnya": r.zipcode_seharusnya || r.zipcode,
         "Subzip Saat Ini": r.subzip,
         "No. Dusun / No. RW Seharusnya": r.subzip_seharusnya,
-        "Milik Cabang Lain": r.milik_cabang_lain ? "YA" : "TIDAK",
-        "Cabang Pemilik Seharusnya": r.cabang_pemilik_seharusnya
+        "Kategori Pengajuan": r.loncat_cabang ? "LONCAT CABANG" : "PENAMBAHAN WILAYAH SURVEY",
+        "Nama Cabang Tujuan": r.cabang_pemilik_seharusnya
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);

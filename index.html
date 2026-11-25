@@ -114,9 +114,10 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Baris Zipcode & Subzip (Saat Ini vs Seharusnya) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Zipcode *</label>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Zipcode Saat Ini *</label>
             <input type="text" id="zipcode" required maxlength="5" placeholder="14871"
               class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
           </div>
@@ -125,15 +126,23 @@
             <input type="text" id="subzip" required placeholder="0801"
               class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
           </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/60 border border-blue-200/80 p-3.5 rounded-xl">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Subzip Seharusnya *</label>
+            <label class="block text-xs font-bold text-blue-900 mb-1.5">Zipcode Seharusnya *</label>
+            <input type="text" id="zipcode_seharusnya" required maxlength="5" placeholder="14872"
+              class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-blue-900 mb-1.5">Subzip Seharusnya *</label>
             <input type="text" id="subzip_seharusnya" required placeholder="0810"
-              class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
+              class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
           </div>
         </div>
 
         <!-- Checkbox Milik Cabang Lain -->
-        <div class="pt-2">
+        <div class="pt-1">
           <label class="inline-flex items-center gap-3 cursor-pointer select-none bg-amber-50 border border-amber-200 px-4 py-3 rounded-xl w-full hover:bg-amber-100/60 transition">
             <input type="checkbox" id="milik_cabang_lain" onchange="toggleCabangLain()"
               class="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500">
@@ -280,7 +289,8 @@
               <th class="p-3 font-semibold">Waktu Input</th>
               <th class="p-3 font-semibold">Cluster & Cabang</th>
               <th class="p-3 font-semibold">Order & Calon Anggota</th>
-              <th class="p-3 font-semibold">Zipcode & Subzip</th>
+              <th class="p-3 font-semibold">Zipcode (Awal &rarr; Seharusnya)</th>
+              <th class="p-3 font-semibold">Subzip (Awal &rarr; Seharusnya)</th>
               <th class="p-3 font-semibold">Status & Cabang Pemilik</th>
             </tr>
           </thead>
@@ -403,18 +413,23 @@
         const res = await fetch(SCRIPT_URL);
         const json = await res.json();
         if (json.status === "success" && Array.isArray(json.data)) {
-          allRecords = json.data.map(item => ({
-            timestamp: item["Timestamp"] || "",
-            nama_cabang: (item["Nama Cabang"] || "").toUpperCase(),
-            nama_cluster: (item["Nama Cluster"] || "").toUpperCase(),
-            nomor_order: String(item["Nomor Order"] || "").replace(/^'/, ""),
-            nama_calon_anggota: (item["Nama Calon Anggota"] || "").toUpperCase(),
-            zipcode: String(item["Zipcode"] || "").replace(/^'/, ""),
-            subzip: String(item["Subzip Saat Ini"] || "").replace(/^'/, ""),
-            subzip_seharusnya: String(item["Subzip Seharusnya"] || "").replace(/^'/, ""),
-            milik_cabang_lain: item["Milik Cabang Lain"] === "Ya",
-            cabang_pemilik_seharusnya: (item["Cabang Pemilik Seharusnya"] || "-").toUpperCase()
-          }));
+          allRecords = json.data.map(item => {
+            const zipAwal = String(item["Zipcode"] || "").replace(/^'/, "");
+            const zipSeharusnya = String(item["Zipcode Seharusnya"] || zipAwal).replace(/^'/, "");
+            return {
+              timestamp: item["Timestamp"] || "",
+              nama_cabang: (item["Nama Cabang"] || "").toUpperCase(),
+              nama_cluster: (item["Nama Cluster"] || "").toUpperCase(),
+              nomor_order: String(item["Nomor Order"] || "").replace(/^'/, ""),
+              nama_calon_anggota: (item["Nama Calon Anggota"] || "").toUpperCase(),
+              zipcode: zipAwal,
+              zipcode_seharusnya: zipSeharusnya,
+              subzip: String(item["Subzip Saat Ini"] || "").replace(/^'/, ""),
+              subzip_seharusnya: String(item["Subzip Seharusnya"] || "").replace(/^'/, ""),
+              milik_cabang_lain: item["Milik Cabang Lain"] === "Ya",
+              cabang_pemilik_seharusnya: (item["Cabang Pemilik Seharusnya"] || "-").toUpperCase()
+            };
+          });
           saveToLocal(allRecords);
           renderDashboard();
           statusEl.textContent = "Live Sheet Aktif";
@@ -442,6 +457,7 @@
         nomor_order: document.getElementById("nomor_order").value.trim().toUpperCase(),
         nama_calon_anggota: document.getElementById("nama_calon_anggota").value.trim().toUpperCase(),
         zipcode: document.getElementById("zipcode").value.trim(),
+        zipcode_seharusnya: document.getElementById("zipcode_seharusnya").value.trim(),
         subzip: document.getElementById("subzip").value.trim(),
         subzip_seharusnya: document.getElementById("subzip_seharusnya").value.trim(),
         milik_cabang_lain: isCross,
@@ -561,10 +577,12 @@
       const statusFilter = document.getElementById("filterStatus")?.value || "ALL";
 
       const filtered = allRecords.filter(r => {
+        const zipTarget = r.zipcode_seharusnya || r.zipcode;
         const matchText =
           r.nama_cluster.includes(keyword) ||
           r.nama_cabang.includes(keyword) ||
           r.zipcode.includes(keyword) ||
+          zipTarget.includes(keyword) ||
           r.subzip_seharusnya.includes(keyword) ||
           r.cabang_pemilik_seharusnya.includes(keyword);
 
@@ -579,6 +597,7 @@
       // Grouping Cluster & Cabang
       const grouped = {};
       filtered.forEach(item => {
+        const zipTarget = item.zipcode_seharusnya || item.zipcode;
         const key = `${item.nama_cluster}|||${item.nama_cabang}`;
         if (!grouped[key]) {
           grouped[key] = {
@@ -595,11 +614,11 @@
 
         if (!item.milik_cabang_lain) {
           grouped[key].internalCount += 1;
-          const detailKey = `${item.zipcode}|${item.subzip_seharusnya}`;
+          const detailKey = `${item.zipcode}|${zipTarget}|${item.subzip_seharusnya}`;
           grouped[key].internalDetails[detailKey] = (grouped[key].internalDetails[detailKey] || 0) + 1;
         } else {
           grouped[key].crossCount += 1;
-          const crossKey = `${item.zipcode}|${item.subzip}|${item.subzip_seharusnya}|${item.cabang_pemilik_seharusnya}`;
+          const crossKey = `${item.zipcode}|${zipTarget}|${item.subzip}|${item.subzip_seharusnya}|${item.cabang_pemilik_seharusnya}`;
           grouped[key].crossDetails[crossKey] = (grouped[key].crossDetails[crossKey] || 0) + 1;
         }
       });
@@ -620,19 +639,25 @@
           const g = grouped[k];
 
           const internalList = Object.entries(g.internalDetails).map(([pair, count]) => {
-            const [zip, subSeharusnya] = pair.split("|");
+            const [zipAwal, zipSeharusnya, subSeharusnya] = pair.split("|");
+            const zipLabel = (zipAwal && zipAwal !== zipSeharusnya)
+              ? `Zipcode ${zipAwal} &rarr; <strong>${zipSeharusnya}</strong>`
+              : `<strong>Zipcode ${zipSeharusnya}</strong>`;
             return `<li class="flex items-start gap-2 text-xs text-slate-700">
               <span class="text-blue-600 font-bold">•</span>
-              <span>Penambahan <strong>Zipcode ${zip}</strong> dengan <strong>Subzip seharusnya ${subSeharusnya}</strong> <span class="text-slate-500">(${count} order)</span></span>
+              <span>Penambahan ${zipLabel} dengan <strong>Subzip seharusnya ${subSeharusnya}</strong> <span class="text-slate-500">(${count} order)</span></span>
             </li>`;
           }).join("");
 
           const crossList = Object.entries(g.crossDetails).map(([pair, count]) => {
-            const [zip, subAwal, subSeharusnya, pemilik] = pair.split("|");
+            const [zipAwal, zipSeharusnya, subAwal, subSeharusnya, pemilik] = pair.split("|");
+            const zipInfo = (zipAwal && zipAwal !== zipSeharusnya)
+              ? `Zipcode ${zipAwal} &rarr; <strong>${zipSeharusnya}</strong>`
+              : `Zipcode <strong>${zipSeharusnya}</strong>`;
             return `<li class="flex items-start gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 p-2.5 rounded-lg">
               <span class="text-amber-600 font-bold">⚠</span>
               <span>
-                <strong>Milik Cabang Lain:</strong> Zipcode <strong>${zip}</strong> (Subzip input: ${subAwal} / Subzip seharusnya: <strong>${subSeharusnya}</strong>) adalah area milik <strong>${pemilik}</strong> <span class="text-amber-700">(${count} order)</span>.
+                <strong>Milik Cabang Lain:</strong> ${zipInfo} (Subzip input: ${subAwal} / Subzip seharusnya: <strong>${subSeharusnya}</strong>) adalah area milik <strong>${pemilik}</strong> <span class="text-amber-700">(${count} order)</span>.
               </span>
             </li>`;
           }).join("");
@@ -662,7 +687,9 @@
 
       // Render Tabel Mentah
       const tbody = document.getElementById("rawTableBody");
-      tbody.innerHTML = [...filtered].reverse().map(r => `
+      tbody.innerHTML = [...filtered].reverse().map(r => {
+        const zipTarget = r.zipcode_seharusnya || r.zipcode;
+        return `
         <tr class="hover:bg-slate-50">
           <td class="p-3 text-[11px] text-slate-500 whitespace-nowrap">${r.timestamp}</td>
           <td class="p-3">
@@ -674,8 +701,10 @@
             <div class="text-slate-600">${r.nama_calon_anggota}</div>
           </td>
           <td class="p-3 font-mono">
-            <div>Zip: <strong>${r.zipcode}</strong></div>
-            <div class="text-[11px] text-slate-500">Subzip: ${r.subzip} &rarr; <strong class="text-emerald-700">${r.subzip_seharusnya}</strong></div>
+            <div>${r.zipcode} &rarr; <strong class="text-blue-700">${zipTarget}</strong></div>
+          </td>
+          <td class="p-3 font-mono">
+            <div>${r.subzip} &rarr; <strong class="text-emerald-700">${r.subzip_seharusnya}</strong></div>
           </td>
           <td class="p-3">
             ${r.milik_cabang_lain
@@ -684,7 +713,7 @@
             }
           </td>
         </tr>
-      `).join("");
+      `}).join("");
     }
 
     // Salin tautan langsung menuju halaman Report (#report)
@@ -702,15 +731,16 @@
 
       const grouped = {};
       allRecords.forEach(item => {
+        const zipTarget = item.zipcode_seharusnya || item.zipcode;
         const key = `${item.nama_cluster}|||${item.nama_cabang}`;
         if (!grouped[key]) {
           grouped[key] = { cluster: item.nama_cluster, cabang: item.nama_cabang, total: 0, lines: [] };
         }
         grouped[key].total += 1;
         if (!item.milik_cabang_lain) {
-          grouped[key].lines.push(`- Penambahan Zipcode ${item.zipcode} dengan Subzip seharusnya ${item.subzip_seharusnya} (Order: ${item.nomor_order})`);
+          grouped[key].lines.push(`- Penambahan Zipcode seharusnya ${zipTarget} (awal: ${item.zipcode}) dengan Subzip seharusnya ${item.subzip_seharusnya} (Order: ${item.nomor_order})`);
         } else {
-          grouped[key].lines.push(`- [MILIK CABANG LAIN] Zipcode ${item.zipcode} / Subzip ${item.subzip_seharusnya} adalah milik ${item.cabang_pemilik_seharusnya} (Order: ${item.nomor_order})`);
+          grouped[key].lines.push(`- [MILIK CABANG LAIN] Zipcode seharusnya ${zipTarget} / Subzip seharusnya ${item.subzip_seharusnya} adalah milik ${item.cabang_pemilik_seharusnya} (Order: ${item.nomor_order})`);
         }
       });
 
@@ -734,7 +764,8 @@
         "Nama Cabang": r.nama_cabang,
         "Nomor Order": r.nomor_order,
         "Nama Calon Anggota": r.nama_calon_anggota,
-        "Zipcode": r.zipcode,
+        "Zipcode Saat Ini": r.zipcode,
+        "Zipcode Seharusnya": r.zipcode_seharusnya || r.zipcode,
         "Subzip Saat Ini": r.subzip,
         "Subzip Seharusnya": r.subzip_seharusnya,
         "Milik Cabang Lain": r.milik_cabang_lain ? "YA" : "TIDAK",

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoring & Report Subzip Cabang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    .watermark {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(71, 85, 105, 0.55);
+      pointer-events: none;
+      z-index: 50;
+      animation: pulseOpacity 3s infinite ease-in-out;
+    }
+    @keyframes pulseOpacity {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 0.85; }
+    }
+  </style>
+</head>
+<body class="text-slate-800 pb-16">
+
+  <!-- Header -->
+  <header class="bg-blue-900 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Sistem Pendataan & Report Subzip</h1>
+        <p class="text-xs text-blue-200">Validasi Mapping Zipcode, Subzip & Pemindahan Coverage Cabang</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="syncStatus" class="text-xs px-2.5 py-1 rounded-full bg-blue-800 text-blue-100 border border-blue-700">
+          Menghubungkan ke Sheet...
+        </span>
+        <button onclick="fetchDataFromSheet()" class="text-xs bg-white text-blue-900 hover:bg-blue-50 font-semibold px-3 py-1.5 rounded-lg shadow-sm transition">
+          Refresh Data
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Kolom Kiri: Form Input -->
+    <div class="lg:col-span-5">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <h2 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4">Input Data Order & Subzip</h2>
+        
+        <form id="subzipForm" class="space-y-3.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Cluster *</label>
+              <input type="text" id="nama_cluster" required placeholder="Contoh: CLUSTER BANTEN 1"
+                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Cabang (Penginput) *</label>
+              <input type="text" id="nama_cabang" required placeholder="Contoh: CABANG SERANG"
+                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Order *</label>
+              <input type="text" id="nomor_order" required placeholder="Contoh: ORD-2026001"
+                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Calon Anggota *</label>
+              <input type="text" id="nama_calon_anggota" required placeholder="Nama Lengkap"
+                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Zipcode *</label>
+              <input type="text" id="zipcode" required maxlength="5" placeholder="14871"
+                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Subzip Saat Ini *</label>
+              <input type="text" id="subzip" required placeholder="0801"
+                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Subzip Seharusnya *</label>
+              <input type="text" id="subzip_seharusnya" required placeholder="0810"
+                class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
+            </div>
+          </div>
+
+          <!-- Checkbox Milik Cabang Lain -->
+          <div class="pt-2">
+            <label class="inline-flex items-center gap-2.5 cursor-pointer select-none bg-amber-50 border border-amber-200 px-3.5 py-2.5 rounded-lg w-full">
+              <input type="checkbox" id="milik_cabang_lain" onchange="toggleCabangLain()"
+                class="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500">
+              <span class="text-sm font-semibold text-amber-900">Milik Cabang Lain (Beda Coverage)</span>
+            </label>
+          </div>
+
+          <!-- Box Dinamis Nama Cabang Pemilik -->
+          <div id="boxCabangLain" class="hidden bg-amber-50/60 border border-amber-200 rounded-lg p-3 transition-all">
+            <label class="block text-xs font-bold text-amber-900 mb-1">Nama Cabang Pemilik Coverage Seharusnya *</label>
+            <input type="text" id="cabang_pemilik_seharusnya" placeholder="Masukkan nama cabang yang meng-cover area ini"
+              class="w-full px-3 py-2 text-sm bg-white border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 uppercase">
+            <p class="text-[11px] text-amber-700 mt-1">Wajib diisi jika zipcode & subzip tersebut adalah area milik cabang lain.</p>
+          </div>
+
+          <button type="submit" id="btnSubmit"
+            class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 px-4 rounded-lg shadow transition flex justify-center items-center gap-2">
+            <span>Simpan Data & Update Report</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Kolom Kanan: Report & Detail -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- Card Ringkasan Report Publik -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-800">Report Rekapitulasi Subzip (Semua Cabang)</h2>
+            <p class="text-xs text-slate-500">Data tersinkronisasi otomatis dan dapat dilihat oleh siapa saja yang membuka link ini.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="copySummaryText()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg transition">
+              Copy Teks Report
+            </button>
+            <button onclick="exportExcel()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg transition">
+              Export Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Cluster / Cabang -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <input type="text" id="filterSearch" onkeyup="renderDashboard()" placeholder="Cari Cluster, Cabang, atau Zipcode..."
+            class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500">
+          <select id="filterStatus" onchange="renderDashboard()"
+            class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white">
+            <option value="ALL">Semua Status Pengajuan</option>
+            <option value="INTERNAL">Penambahan Subzip Cabang Sendiri</option>
+            <option value="CROSS">Milik Cabang Lain</option>
+          </select>
+        </div>
+
+        <!-- Kontainer Report Detail per Cluster & Cabang -->
+        <div id="reportContainer" class="space-y-4 max-h-[540px] overflow-y-auto pr-1">
+          <div class="text-center py-8 text-sm text-slate-400">Memuat data report...</div>
+        </div>
+      </div>
+
+      <!-- Tabel Log Data Mentah -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-800 mb-3">Log Detail Inputan Terbaru (<span id="totalCount">0</span> Data)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                <th class="p-2.5 font-semibold">Cluster & Cabang</th>
+                <th class="p-2.5 font-semibold">Order & Calon Anggota</th>
+                <th class="p-2.5 font-semibold">Mapping Zip / Subzip</th>
+                <th class="p-2.5 font-semibold">Keterangan Coverage</th>
+              </tr>
+            </thead>
+            <tbody id="rawTableBody" class="divide-y divide-slate-100">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="watermark">powered by Asy-Syam Sakti</div>
+
+  <script>
+    // =========================================================================
+    // KONFIGURASI URL GOOGLE APPS SCRIPT WEB APP
+    // =========================================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmA4gmoO3D_lV0ZJ_dR5j5FbC8JJd8AQJtvkHvW1JiMV3nzHJ-iYF1KzYHBPUHyl1xow/exec";
+    const LOCAL_STORAGE_KEY = "ksp_subzip_records_v1";
+
+    let allRecords = [];
+
+    // Toggle tampilan box input cabang pemilik
+    function toggleCabangLain() {
+      const isChecked = document.getElementById("milik_cabang_lain").checked;
+      const box = document.getElementById("boxCabangLain");
+      const inputPemilik = document.getElementById("cabang_pemilik_seharusnya");
+
+      if (isChecked) {
+        box.classList.remove("hidden");
+        inputPemilik.setAttribute("required", "true");
+      } else {
+        box.classList.add("hidden");
+        inputPemilik.removeAttribute("required");
+        inputPemilik.value = "";
+      }
+    }
+
+    // Load awal saat halaman dibuka
+    document.addEventListener("DOMContentLoaded", () => {
+      loadFromLocal();
+      renderDashboard();
+      fetchDataFromSheet();
+    });
+
+    // Simpan & muat dari Local Storage sebagai backup instan
+    function saveToLocal(data) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadFromLocal() {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) {
+        try {
+          allRecords = JSON.parse(saved);
+        } catch (e) {
+          allRecords = [];
+        }
+      }
+    }
+
+    // Ambil seluruh data dari Google Sheets agar semua orang melihat report yang sama
+    async function fetchDataFromSheet() {
+      const statusEl = document.getElementById("syncStatus");
+      if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_URL")) {
+        statusEl.textContent = "Mode Lokal (URL Sheet Belum Diisi)";
+        statusEl.className = "text-xs px-2.5 py-1 rounded-full bg-amber-500 text-white font-medium";
+        return;
+      }
+
+      statusEl.textContent = "Menyinkronkan...";
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const json = await res.json();
+        if (json.status === "success" && Array.isArray(json.data)) {
+          allRecords = json.data.map(item => ({
+            timestamp: item["Timestamp"] || "",
+            nama_cabang: (item["Nama Cabang"] || "").toUpperCase(),
+            nama_cluster: (item["Nama Cluster"] || "").toUpperCase(),
+            nomor_order: String(item["Nomor Order"] || "").replace(/^'/, ""),
+            nama_calon_anggota: (item["Nama Calon Anggota"] || "").toUpperCase(),
+            zipcode: String(item["Zipcode"] || "").replace(/^'/, ""),
+            subzip: String(item["Subzip Saat Ini"] || "").replace(/^'/, ""),
+            subzip_seharusnya: String(item["Subzip Seharusnya"] || "").replace(/^'/, ""),
+            milik_cabang_lain: item["Milik Cabang Lain"] === "Ya",
+            cabang_pemilik_seharusnya: (item["Cabang Pemilik Seharusnya"] || "-").toUpperCase()
+          }));
+          saveToLocal(allRecords);
+          renderDashboard();
+          statusEl.textContent = "Tersinkronisasi (Live Sheet)";
+          statusEl.className = "text-xs px-2.5 py-1 rounded-full bg-emerald-600 text-white font-medium";
+        }
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Offline / Menggunakan Cache Lokal";
+        statusEl.className = "text-xs px-2.5 py-1 rounded-full bg-rose-600 text-white font-medium";
+      }
+    }
+
+    // Submit form ke Google Sheets & Local Storage
+    document.getElementById("subzipForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSubmit");
+      btn.disabled = true;
+      btn.innerHTML = "<span>Menyimpan Data...</span>";
+
+      const isCross = document.getElementById("milik_cabang_lain").checked;
+      const newRecord = {
+        timestamp: new Date().toLocaleString("id-ID"),
+        nama_cluster: document.getElementById("nama_cluster").value.trim().toUpperCase(),
+        nama_cabang: document.getElementById("nama_cabang").value.trim().toUpperCase(),
+        nomor_order: document.getElementById("nomor_order").value.trim().toUpperCase(),
+        nama_calon_anggota: document.getElementById("nama_calon_anggota").value.trim().toUpperCase(),
+        zipcode: document.getElementById("zipcode").value.trim(),
+        subzip: document.getElementById("subzip").value.trim(),
+        subzip_seharusnya: document.getElementById("subzip_seharusnya").value.trim(),
+        milik_cabang_lain: isCross,
+        cabang_pemilik_seharusnya: isCross
+          ? document.getElementById("cabang_pemilik_seharusnya").value.trim().toUpperCase()
+          : "-"
+      };
+
+      // Update lokal langsung agar responsif
+      allRecords.push(newRecord);
+      saveToLocal(allRecords);
+      renderDashboard();
+
+      // Kirim ke Google Sheets
+      if (SCRIPT_URL && !SCRIPT_URL.includes("PASTE_URL")) {
+        try {
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newRecord)
+          });
+          setTimeout(fetchDataFromSheet, 1500);
+        } catch (error) {
+          alert("Tersimpan di browser lokal, namun gagal mengirim ke Google Sheet. Periksa koneksi internet.");
+        }
+      }
+
+      document.getElementById("subzipForm").reset();
+      toggleCabangLain();
+      btn.disabled = false;
+      btn.innerHTML = "<span>Simpan Data & Update Report</span>";
+    });
+
+    // Render Report Terstruktur per Cluster & Cabang
+    function renderDashboard() {
+      const keyword = document.getElementById("filterSearch").value.toUpperCase();
+      const statusFilter = document.getElementById("filterStatus").value;
+
+      const filtered = allRecords.filter(r => {
+        const matchText =
+          r.nama_cluster.includes(keyword) ||
+          r.nama_cabang.includes(keyword) ||
+          r.zipcode.includes(keyword) ||
+          r.subzip_seharusnya.includes(keyword) ||
+          r.cabang_pemilik_seharusnya.includes(keyword);
+
+        if (!matchText) return false;
+        if (statusFilter === "INTERNAL" && r.milik_cabang_lain) return false;
+        if (statusFilter === "CROSS" && !r.milik_cabang_lain) return false;
+        return true;
+      });
+
+      document.getElementById("totalCount").textContent = filtered.length;
+
+      // Grouping berdasarkan Cluster -> Nama Cabang
+      const grouped = {};
+      filtered.forEach(item => {
+        const key = `${item.nama_cluster}|||${item.nama_cabang}`;
+        if (!grouped[key]) {
+          grouped[key] = {
+            cluster: item.nama_cluster,
+            cabang: item.nama_cabang,
+            total: 0,
+            internalDetails: {},
+            crossDetails: {}
+          };
+        }
+        grouped[key].total += 1;
+
+        if (!item.milik_cabang_lain) {
+          const detailKey = `${item.zipcode}|${item.subzip_seharusnya}`;
+          grouped[key].internalDetails[detailKey] = (grouped[key].internalDetails[detailKey] || 0) + 1;
+        } else {
+          const crossKey = `${item.zipcode}|${item.subzip}|${item.subzip_seharusnya}|${item.cabang_pemilik_seharusnya}`;
+          grouped[key].crossDetails[crossKey] = (grouped[key].crossDetails[crossKey] || 0) + 1;
+        }
+      });
+
+      const reportContainer = document.getElementById("reportContainer");
+      const groupKeys = Object.keys(grouped);
+
+      if (groupKeys.length === 0) {
+        reportContainer.innerHTML = `<div class="text-center py-8 text-sm text-slate-400">Belum ada data yang sesuai filter.</div>`;
+      } else {
+        reportContainer.innerHTML = groupKeys.map(k => {
+          const g = grouped[k];
+
+          // Detail Penambahan Subzip Cabang Sendiri
+          const internalList = Object.entries(g.internalDetails).map(([pair, count]) => {
+            const [zip, subSeharusnya] = pair.split("|");
+            return `<li class="flex items-start gap-2 text-xs text-slate-700">
+              <span class="text-blue-600 font-bold">•</span>
+              <span>Penambahan <strong>Zipcode ${zip}</strong> dengan <strong>Subzip seharusnya ${subSeharusnya}</strong> <span class="text-slate-500">(${count} order)</span></span>
+            </li>`;
+          }).join("");
+
+          // Detail Milik Cabang Lain
+          const crossList = Object.entries(g.crossDetails).map(([pair, count]) => {
+            const [zip, subAwal, subSeharusnya, pemilik] = pair.split("|");
+            return `<li class="flex items-start gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200/80 p-2 rounded-md">
+              <span class="text-amber-600 font-bold">⚠</span>
+              <span>
+                <strong>Milik Cabang Lain:</strong> Zipcode <strong>${zip}</strong> (Subzip input: ${subAwal} / Subzip seharusnya: <strong>${subSeharusnya}</strong>) tersebut merupakan area milik <strong>${pemilik}</strong> <span class="text-amber-700">(${count} order)</span>.
+              </span>
+            </li>`;
+          }).join("");
+
+          return `
+            <div class="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+              <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-2.5">
+                <div>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded">${g.cluster}</span>
+                  <h3 class="text-sm font-bold text-slate-900 mt-1">${g.cabang}</h3>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs text-slate-500 block">Total Pengajuan</span>
+                  <span class="text-lg font-extrabold text-blue-900">${g.total} <span class="text-xs font-normal text-slate-600">Data</span></span>
+                </div>
+              </div>
+              <ul class="space-y-1.5">
+                ${internalList}
+                ${crossList}
+              </ul>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // Render Tabel Log Mentah (Terbaru di atas)
+      const tbody = document.getElementById("rawTableBody");
+      tbody.innerHTML = [...filtered].reverse().map(r => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2.5">
+            <div class="font-bold text-slate-800">${r.nama_cabang}</div>
+            <div class="text-[11px] text-slate-500">${r.nama_cluster}</div>
+          </td>
+          <td class="p-2.5">
+            <div class="font-semibold text-blue-800">${r.nomor_order}</div>
+            <div class="text-slate-600">${r.nama_calon_anggota}</div>
+          </td>
+          <td class="p-2.5 font-mono">
+            <div>Zip: <strong>${r.zipcode}</strong></div>
+            <div class="text-[11px] text-slate-500">Subzip: ${r.subzip} &rarr; <strong class="text-emerald-700">${r.subzip_seharusnya}</strong></div>
+          </td>
+          <td class="p-2.5">
+            ${r.milik_cabang_lain
+              ? `<span class="inline-block bg-amber-100 text-amber-900 font-semibold px-2 py-0.5 rounded text-[11px]">Milik: ${r.cabang_pemilik_seharusnya}</span>`
+              : `<span class="inline-block bg-emerald-100 text-emerald-800 font-medium px-2 py-0.5 rounded text-[11px]">Cabang Sendiri</span>`
+            }
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // Salin teks report siap kirim ke WhatsApp / Email
+    function copySummaryText() {
+      if (allRecords.length === 0) return alert("Belum ada data untuk disalin.");
+
+      const grouped = {};
+      allRecords.forEach(item => {
+        const key = `${item.nama_cluster}|||${item.nama_cabang}`;
+        if (!grouped[key]) {
+          grouped[key] = { cluster: item.nama_cluster, cabang: item.nama_cabang, total: 0, lines: [] };
+        }
+        grouped[key].total += 1;
+        if (!item.milik_cabang_lain) {
+          grouped[key].lines.push(`- Penambahan Zipcode ${item.zipcode} dengan Subzip seharusnya ${item.subzip_seharusnya} (Order: ${item.nomor_order})`);
+        } else {
+          grouped[key].lines.push(`- [MILIK CABANG LAIN] Zipcode ${item.zipcode} / Subzip ${item.subzip_seharusnya} adalah milik ${item.cabang_pemilik_seharusnya} (Order: ${item.nomor_order})`);
+        }
+      });
+
+      let text = "*REPORT MAPPING SUBZIP & COVERAGE CABANG*\n\n";
+      Object.values(grouped).forEach(g => {
+        text += `*Cluster:* ${g.cluster}\n*Cabang:* ${g.cabang}\n*Jumlah Total:* ${g.total}\n*Detail:*\n${g.lines.join("\n")}\n\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Teks report berhasil disalin! Siap ditempel ke WhatsApp atau Email.");
+      });
+    }
+
+    // Export ke Excel (.xlsx)
+    function exportExcel() {
+      if (allRecords.length === 0) return alert("Belum ada data untuk diexport.");
+      const rows = allRecords.map((r, idx) => ({
+        "No": idx + 1,
+        "Timestamp": r.timestamp,
+        "Nama Cluster": r.nama_cluster,
+        "Nama Cabang": r.nama_cabang,
+        "Nomor Order": r.nomor_order,
+        "Nama Calon Anggota": r.nama_calon_anggota,
+        "Zipcode": r.zipcode,
+        "Subzip Saat Ini": r.subzip,
+        "Subzip Seharusnya": r.subzip_seharusnya,
+        "Milik Cabang Lain": r.milik_cabang_lain ? "YA" : "TIDAK",
+        "Cabang Pemilik Seharusnya": r.cabang_pemilik_seharusnya
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Report_Subzip");
+      XLSX.writeFile(wb, `Report_Subzip_Cabang_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+  </script>
+</body>
+</html>

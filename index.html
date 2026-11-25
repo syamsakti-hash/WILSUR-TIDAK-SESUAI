@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Pendataan & Report Subzip Cabang</title>
+  <title>Sistem Pendataan & Report Mapping Cabang</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -45,8 +45,8 @@
   <header class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3">
       <div>
-        <h1 class="text-lg sm:text-xl font-bold tracking-tight">Sistem Pendataan & Report Subzip</h1>
-        <p class="text-xs text-blue-200">Validasi Mapping Zipcode, Subzip & Pemindahan Coverage Cabang</p>
+        <h1 class="text-lg sm:text-xl font-bold tracking-tight">Sistem Pendataan & Report Mapping</h1>
+        <p class="text-xs text-blue-200">Validasi Mapping Zipcode, No. Dusun / No. RW & Pemindahan Coverage Cabang</p>
       </div>
 
       <!-- Tombol Pindah Page -->
@@ -79,7 +79,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 mb-6 gap-2">
         <div>
-          <h2 class="text-lg font-bold text-slate-800">Formulir Pengajuan Mapping Subzip</h2>
+          <h2 class="text-lg font-bold text-slate-800">Formulir Pengajuan Mapping Area</h2>
           <p class="text-xs text-slate-500 mt-0.5">Data otomatis tersimpan di browser & terintegrasi langsung ke Google Spreadsheet.</p>
         </div>
         <button onclick="switchPage('report')" class="text-xs text-blue-700 hover:text-blue-900 font-semibold underline">
@@ -114,7 +114,7 @@
           </div>
         </div>
 
-        <!-- Baris Zipcode & Subzip (Saat Ini vs Seharusnya) -->
+        <!-- Baris Zipcode & Subzip Saat Ini -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1.5">Zipcode Saat Ini *</label>
@@ -128,6 +128,7 @@
           </div>
         </div>
 
+        <!-- Baris Zipcode Seharusnya & No. Dusun / No. RW Seharusnya -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/60 border border-blue-200/80 p-3.5 rounded-xl">
           <div>
             <label class="block text-xs font-bold text-blue-900 mb-1.5">Zipcode Seharusnya *</label>
@@ -135,9 +136,9 @@
               class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
           </div>
           <div>
-            <label class="block text-xs font-bold text-blue-900 mb-1.5">Subzip Seharusnya *</label>
-            <input type="text" id="subzip_seharusnya" required placeholder="0810"
-              class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono">
+            <label class="block text-xs font-bold text-blue-900 mb-1.5">No. Dusun / No. RW Seharusnya *</label>
+            <input type="text" id="subzip_seharusnya" required placeholder="Contoh: Dusun 02 / RW 005"
+              class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
           </div>
         </div>
 
@@ -148,7 +149,7 @@
               class="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500">
             <div>
               <span class="text-sm font-bold text-amber-900 block">Milik Cabang Lain (Beda Coverage)</span>
-              <span class="text-[11px] text-amber-700">Centang jika Zipcode & Subzip ini masuk ke area coverage cabang lain.</span>
+              <span class="text-[11px] text-amber-700">Centang jika Zipcode & No. Dusun / RW ini masuk ke area coverage cabang lain.</span>
             </div>
           </label>
         </div>
@@ -158,7 +159,7 @@
           <label class="block text-xs font-bold text-amber-900 mb-1.5">Nama Cabang yang Cover Seharusnya *</label>
           <input type="text" id="cabang_pemilik_seharusnya" placeholder="Masukkan nama cabang pemilik coverage sebenarnya"
             class="w-full px-3.5 py-2.5 text-sm bg-white border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 uppercase">
-          <p class="text-[11px] text-amber-800 mt-1.5">Nama cabang ini akan otomatis ditampilkan di halaman report sebagai pemilik sah Zipcode & Subzip tersebut.</p>
+          <p class="text-[11px] text-amber-800 mt-1.5">Nama cabang ini akan otomatis ditampilkan di halaman report sebagai pemilik sah area tersebut.</p>
         </div>
 
         <div class="pt-3 flex flex-col sm:flex-row gap-3">
@@ -190,7 +191,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
       <div>
         <div class="flex items-center gap-2">
-          <h2 class="text-lg font-bold text-slate-800">Dashboard Report & Grafik Mapping Subzip</h2>
+          <h2 class="text-lg font-bold text-slate-800">Dashboard Report & Grafik Mapping Area</h2>
           <span class="text-[11px] bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full">Publik / Live</span>
         </div>
         <p class="text-xs text-slate-500 mt-0.5">Rekapitulasi seluruh cabang yang dapat diakses kapan saja melalui link halaman ini.</p>
@@ -217,7 +218,7 @@
         <span class="text-[11px] text-slate-400">Total order terdata di sistem</span>
       </div>
       <div class="bg-white rounded-xl border border-blue-200 p-4 shadow-sm">
-        <span class="text-xs font-semibold text-blue-700 uppercase">Penambahan Subzip Internal</span>
+        <span class="text-xs font-semibold text-blue-700 uppercase">Penambahan Area Internal</span>
         <div class="text-2xl font-extrabold text-blue-900 mt-1" id="kpiInternal">0</div>
         <span class="text-[11px] text-blue-600">Area coverage cabang sendiri</span>
       </div>
@@ -234,7 +235,7 @@
         <div class="flex justify-between items-center mb-3">
           <div>
             <h3 class="text-sm font-bold text-slate-800">Grafik Jumlah Pengajuan per Cabang</h3>
-            <p class="text-[11px] text-slate-500">Perbandingan penambahan subzip cabang sendiri vs milik cabang lain</p>
+            <p class="text-[11px] text-slate-500">Perbandingan penambahan area cabang sendiri vs milik cabang lain</p>
           </div>
         </div>
         <div class="relative h-64 w-full">
@@ -245,7 +246,7 @@
       <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
         <div>
           <h3 class="text-sm font-bold text-slate-800">Proporsi Status Coverage</h3>
-          <p class="text-[11px] text-slate-500">Persentase subzip internal vs cabang lain</p>
+          <p class="text-[11px] text-slate-500">Persentase area internal vs cabang lain</p>
         </div>
         <div class="relative h-52 w-full flex items-center justify-center my-2">
           <canvas id="doughnutChartStatus"></canvas>
@@ -259,15 +260,15 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4 mb-4">
         <div>
           <h3 class="text-base font-bold text-slate-800">Rincian Report per Cluster & Nama Cabang</h3>
-          <p class="text-xs text-slate-500">Menampilkan detail Zipcode, Subzip seharusnya, serta keterangan cabang pemilik untuk area lintas cabang.</p>
+          <p class="text-xs text-slate-500">Menampilkan detail Zipcode, No. Dusun / No. RW seharusnya, serta keterangan cabang pemilik untuk area lintas cabang.</p>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <input type="text" id="filterSearch" onkeyup="renderDashboard()" placeholder="Cari Cluster, Cabang, Zipcode..."
+          <input type="text" id="filterSearch" onkeyup="renderDashboard()" placeholder="Cari Cluster, Cabang, Zipcode, Dusun/RW..."
             class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500">
           <select id="filterStatus" onchange="renderDashboard()"
             class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 bg-white">
             <option value="ALL">Semua Kategori</option>
-            <option value="INTERNAL">Penambahan Subzip Cabang Sendiri</option>
+            <option value="INTERNAL">Penambahan Area Cabang Sendiri</option>
             <option value="CROSS">Milik Cabang Lain</option>
           </select>
         </div>
@@ -290,7 +291,7 @@
               <th class="p-3 font-semibold">Cluster & Cabang</th>
               <th class="p-3 font-semibold">Order & Calon Anggota</th>
               <th class="p-3 font-semibold">Zipcode (Awal &rarr; Seharusnya)</th>
-              <th class="p-3 font-semibold">Subzip (Awal &rarr; Seharusnya)</th>
+              <th class="p-3 font-semibold">Subzip Awal &rarr; No. Dusun / RW Seharusnya</th>
               <th class="p-3 font-semibold">Status & Cabang Pemilik</th>
             </tr>
           </thead>
@@ -416,6 +417,9 @@
           allRecords = json.data.map(item => {
             const zipAwal = String(item["Zipcode"] || "").replace(/^'/, "");
             const zipSeharusnya = String(item["Zipcode Seharusnya"] || zipAwal).replace(/^'/, "");
+            const dusunRwSeharusnya = String(
+              item["No Dusun / No RW Seharusnya"] || item["Subzip Seharusnya"] || ""
+            ).replace(/^'/, "").toUpperCase();
             return {
               timestamp: item["Timestamp"] || "",
               nama_cabang: (item["Nama Cabang"] || "").toUpperCase(),
@@ -425,7 +429,7 @@
               zipcode: zipAwal,
               zipcode_seharusnya: zipSeharusnya,
               subzip: String(item["Subzip Saat Ini"] || "").replace(/^'/, ""),
-              subzip_seharusnya: String(item["Subzip Seharusnya"] || "").replace(/^'/, ""),
+              subzip_seharusnya: dusunRwSeharusnya,
               milik_cabang_lain: item["Milik Cabang Lain"] === "Ya",
               cabang_pemilik_seharusnya: (item["Cabang Pemilik Seharusnya"] || "-").toUpperCase()
             };
@@ -459,7 +463,7 @@
         zipcode: document.getElementById("zipcode").value.trim(),
         zipcode_seharusnya: document.getElementById("zipcode_seharusnya").value.trim(),
         subzip: document.getElementById("subzip").value.trim(),
-        subzip_seharusnya: document.getElementById("subzip_seharusnya").value.trim(),
+        subzip_seharusnya: document.getElementById("subzip_seharusnya").value.trim().toUpperCase(),
         milik_cabang_lain: isCross,
         cabang_pemilik_seharusnya: isCross
           ? document.getElementById("cabang_pemilik_seharusnya").value.trim().toUpperCase()
@@ -518,7 +522,7 @@
           labels: labels.length ? labels : ["Belum Ada Data"],
           datasets: [
             {
-              label: "Penambahan Subzip Cabang Sendiri",
+              label: "Penambahan Area Cabang Sendiri",
               data: dataInternal.length ? dataInternal : [0],
               backgroundColor: "#1d4ed8",
               borderRadius: 6
@@ -639,25 +643,25 @@
           const g = grouped[k];
 
           const internalList = Object.entries(g.internalDetails).map(([pair, count]) => {
-            const [zipAwal, zipSeharusnya, subSeharusnya] = pair.split("|");
+            const [zipAwal, zipSeharusnya, dusunRwSeharusnya] = pair.split("|");
             const zipLabel = (zipAwal && zipAwal !== zipSeharusnya)
               ? `Zipcode ${zipAwal} &rarr; <strong>${zipSeharusnya}</strong>`
               : `<strong>Zipcode ${zipSeharusnya}</strong>`;
             return `<li class="flex items-start gap-2 text-xs text-slate-700">
               <span class="text-blue-600 font-bold">•</span>
-              <span>Penambahan ${zipLabel} dengan <strong>Subzip seharusnya ${subSeharusnya}</strong> <span class="text-slate-500">(${count} order)</span></span>
+              <span>Penambahan ${zipLabel} dengan <strong>No. Dusun / No. RW seharusnya ${dusunRwSeharusnya}</strong> <span class="text-slate-500">(${count} order)</span></span>
             </li>`;
           }).join("");
 
           const crossList = Object.entries(g.crossDetails).map(([pair, count]) => {
-            const [zipAwal, zipSeharusnya, subAwal, subSeharusnya, pemilik] = pair.split("|");
+            const [zipAwal, zipSeharusnya, subAwal, dusunRwSeharusnya, pemilik] = pair.split("|");
             const zipInfo = (zipAwal && zipAwal !== zipSeharusnya)
               ? `Zipcode ${zipAwal} &rarr; <strong>${zipSeharusnya}</strong>`
               : `Zipcode <strong>${zipSeharusnya}</strong>`;
             return `<li class="flex items-start gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 p-2.5 rounded-lg">
               <span class="text-amber-600 font-bold">⚠</span>
               <span>
-                <strong>Milik Cabang Lain:</strong> ${zipInfo} (Subzip input: ${subAwal} / Subzip seharusnya: <strong>${subSeharusnya}</strong>) adalah area milik <strong>${pemilik}</strong> <span class="text-amber-700">(${count} order)</span>.
+                <strong>Milik Cabang Lain:</strong> ${zipInfo} (Subzip input: ${subAwal} / No. Dusun / No. RW seharusnya: <strong>${dusunRwSeharusnya}</strong>) adalah area milik <strong>${pemilik}</strong> <span class="text-amber-700">(${count} order)</span>.
               </span>
             </li>`;
           }).join("");
@@ -703,8 +707,8 @@
           <td class="p-3 font-mono">
             <div>${r.zipcode} &rarr; <strong class="text-blue-700">${zipTarget}</strong></div>
           </td>
-          <td class="p-3 font-mono">
-            <div>${r.subzip} &rarr; <strong class="text-emerald-700">${r.subzip_seharusnya}</strong></div>
+          <td class="p-3">
+            <div><span class="font-mono text-slate-500">${r.subzip}</span> &rarr; <strong class="text-emerald-700">${r.subzip_seharusnya}</strong></div>
           </td>
           <td class="p-3">
             ${r.milik_cabang_lain
@@ -738,13 +742,13 @@
         }
         grouped[key].total += 1;
         if (!item.milik_cabang_lain) {
-          grouped[key].lines.push(`- Penambahan Zipcode seharusnya ${zipTarget} (awal: ${item.zipcode}) dengan Subzip seharusnya ${item.subzip_seharusnya} (Order: ${item.nomor_order})`);
+          grouped[key].lines.push(`- Penambahan Zipcode seharusnya ${zipTarget} (awal: ${item.zipcode}) dengan No. Dusun / No. RW seharusnya ${item.subzip_seharusnya} (Order: ${item.nomor_order})`);
         } else {
-          grouped[key].lines.push(`- [MILIK CABANG LAIN] Zipcode seharusnya ${zipTarget} / Subzip seharusnya ${item.subzip_seharusnya} adalah milik ${item.cabang_pemilik_seharusnya} (Order: ${item.nomor_order})`);
+          grouped[key].lines.push(`- [MILIK CABANG LAIN] Zipcode seharusnya ${zipTarget} / No. Dusun / No. RW seharusnya ${item.subzip_seharusnya} adalah milik ${item.cabang_pemilik_seharusnya} (Order: ${item.nomor_order})`);
         }
       });
 
-      let text = "*REPORT MAPPING SUBZIP & COVERAGE CABANG*\n\n";
+      let text = "*REPORT MAPPING AREA & COVERAGE CABANG*\n\n";
       Object.values(grouped).forEach(g => {
         text += `*Cluster:* ${g.cluster}\n*Cabang:* ${g.cabang}\n*Jumlah Total:* ${g.total}\n*Detail:*\n${g.lines.join("\n")}\n\n`;
       });
@@ -767,15 +771,15 @@
         "Zipcode Saat Ini": r.zipcode,
         "Zipcode Seharusnya": r.zipcode_seharusnya || r.zipcode,
         "Subzip Saat Ini": r.subzip,
-        "Subzip Seharusnya": r.subzip_seharusnya,
+        "No. Dusun / No. RW Seharusnya": r.subzip_seharusnya,
         "Milik Cabang Lain": r.milik_cabang_lain ? "YA" : "TIDAK",
         "Cabang Pemilik Seharusnya": r.cabang_pemilik_seharusnya
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Report_Subzip");
-      XLSX.writeFile(wb, `Report_Subzip_Cabang_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Report_Mapping_Area");
+      XLSX.writeFile(wb, `Report_Mapping_Area_Cabang_${new Date().toISOString().slice(0, 10)}.xlsx`);
     }
   </script>
 </body>

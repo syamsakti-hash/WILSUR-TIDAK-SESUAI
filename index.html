@@ -25,42 +25,19 @@
       0%, 100% { opacity: 0.45; }
       50% { opacity: 0.85; }
     }
-    .nav-active {
-      background-color: #ffffff;
-      color: #1e3a8a;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    }
-    .nav-inactive {
-      color: #bfdbfe;
-    }
-    .nav-inactive:hover {
-      background-color: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-    }
   </style>
 </head>
 <body class="text-slate-800 pb-16">
 
-  <!-- Header & Navigasi Halaman -->
+  <!-- Header -->
   <header class="bg-blue-900 text-white shadow-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3">
+    <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
       <div>
         <h1 class="text-lg sm:text-xl font-bold tracking-tight">Sistem Pendataan & Report Mapping</h1>
         <p class="text-xs text-blue-200">Validasi Mapping Zipcode, No. Dusun / No. RW & Pemindahan Coverage Cabang</p>
       </div>
 
-      <!-- Tombol Pindah Page -->
-      <div class="flex items-center bg-blue-950/60 p-1 rounded-xl border border-blue-800">
-        <button id="tab-input" onclick="switchPage('input')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition nav-active">
-          1. Form Input Data
-        </button>
-        <button id="tab-report" onclick="switchPage('report')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition nav-inactive flex items-center gap-1.5">
-          <span>2. Halaman Report & Grafik</span>
-          <span id="badgeTotalNav" class="bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full">0</span>
-        </button>
-      </div>
-
-      <!-- Status Sinkronisasi -->
+      <!-- Status Sinkronisasi & Tombol Khusus Admin Report -->
       <div class="flex items-center gap-2">
         <span id="syncStatus" class="text-[11px] px-2.5 py-1 rounded-full bg-blue-800 text-blue-100 border border-blue-700">
           Menghubungkan...
@@ -68,23 +45,67 @@
         <button onclick="fetchDataFromSheet()" class="text-xs bg-blue-700 hover:bg-blue-600 text-white font-semibold px-2.5 py-1.5 rounded-lg border border-blue-600 transition" title="Muat ulang data terbaru dari Spreadsheet">
           Refresh
         </button>
+
+        <!-- Tombol Khusus Terpisah untuk Membuka Report (Meminta Password) -->
+        <button id="btnAdminReport" onclick="openReportAuth()" class="text-xs bg-blue-950/80 hover:bg-blue-950 text-blue-200 hover:text-white font-semibold px-3 py-1.5 rounded-lg border border-blue-700/80 transition flex items-center gap-1.5" title="Akses Khusus Admin Report">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+          </svg>
+          <span>Report</span>
+          <span id="badgeTotalNav" class="bg-blue-700 text-white text-[10px] px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+
+        <!-- Tombol Kembali & Kunci saat sedang berada di Halaman Report -->
+        <button id="btnBackToInput" onclick="lockAndBackToInput()" class="hidden text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+          <span>&larr; Form Input (Kunci Report)</span>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL PASSWORD HALAMAN REPORT                                         -->
+  <!-- ===================================================================== -->
+  <div id="passwordModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-sm w-full p-6">
+      <div class="flex items-center gap-2.5 mb-3">
+        <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Akses Terbatas</h3>
+          <p class="text-[11px] text-slate-500">Masukkan password untuk membuka Halaman Report & Grafik.</p>
+        </div>
+      </div>
+
+      <form id="passwordForm" onsubmit="verifyReportPassword(event)" class="space-y-3 mt-4">
+        <div>
+          <input type="password" id="reportPasswordInput" placeholder="Masukkan password..." required
+            class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <p id="passwordErrorMsg" class="hidden text-xs text-rose-600 font-semibold mt-1.5">Password salah. Silakan coba lagi.</p>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" onclick="closePasswordModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+            Batal
+          </button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-xl shadow-sm transition">
+            Buka Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ===================================================================== -->
   <!-- PAGE 1: FORM INPUT DATA                                               -->
   <!-- ===================================================================== -->
   <section id="page-input" class="max-w-3xl mx-auto px-4 mt-8">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 mb-6 gap-2">
-        <div>
-          <h2 class="text-lg font-bold text-slate-800">Formulir Pengajuan Mapping Area</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Data otomatis tersimpan di browser & terintegrasi langsung ke Google Spreadsheet.</p>
-        </div>
-        <button onclick="switchPage('report')" class="text-xs text-blue-700 hover:text-blue-900 font-semibold underline">
-          Buka Halaman Report &rarr;
-        </button>
+      <div class="border-b border-slate-100 pb-4 mb-6">
+        <h2 class="text-lg font-bold text-slate-800">Formulir Pengajuan Mapping Area</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Data otomatis tersimpan di browser & terintegrasi langsung ke Google Spreadsheet.</p>
       </div>
 
       <form id="subzipForm" class="space-y-4">
@@ -169,31 +190,26 @@
           <label class="block text-xs font-bold text-amber-900 mb-1.5">Nama Cabang Tujuan / Pemilik *</label>
           <input type="text" id="cabang_pemilik_seharusnya" placeholder="Masukkan nama cabang yang meng-cover area ini"
             class="w-full px-3.5 py-2.5 text-sm bg-white border border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 uppercase">
-          <p class="text-[11px] text-amber-800 mt-1.5">Nama cabang ini akan otomatis ditampilkan di halaman report sebagai tujuan loncat cabang.</p>
+          <p class="text-[11px] text-amber-800 mt-1.5">Nama cabang ini akan otomatis tercatat sebagai tujuan loncat cabang.</p>
         </div>
 
-        <div class="pt-3 flex flex-col sm:flex-row gap-3">
+        <div class="pt-3">
           <button type="submit" id="btnSubmit"
-            class="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-5 rounded-xl shadow transition flex justify-center items-center gap-2">
+            class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-5 rounded-xl shadow transition flex justify-center items-center gap-2">
             <span>Simpan Data ke Spreadsheet</span>
-          </button>
-          <button type="button" onclick="switchPage('report')"
-            class="sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-5 rounded-xl transition">
-            Lihat Report
           </button>
         </div>
       </form>
 
       <!-- Notifikasi Sukses Input -->
-      <div id="submitSuccessBanner" class="hidden mt-5 bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-xl text-xs flex justify-between items-center">
-        <span><strong>Berhasil!</strong> Data telah tersimpan dan report telah diperbarui.</span>
-        <button onclick="switchPage('report')" class="font-bold underline text-emerald-800">Cek di Halaman Report &rarr;</button>
+      <div id="submitSuccessBanner" class="hidden mt-5 bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-xl text-xs">
+        <strong>Berhasil!</strong> Data pengajuan mapping area telah tersimpan ke Spreadsheet.
       </div>
     </div>
   </section>
 
   <!-- ===================================================================== -->
-  <!-- PAGE 2: REPORT & GRAFIK VISUALISASI (TERPISAH)                        -->
+  <!-- PAGE 2: REPORT & GRAFIK VISUALISASI (TERSEMBUNYI & TERKUNCI PASSWORD) -->
   <!-- ===================================================================== -->
   <section id="page-report" class="hidden max-w-7xl mx-auto px-4 mt-6 space-y-6">
     
@@ -202,15 +218,12 @@
       <div>
         <div class="flex items-center gap-2">
           <h2 class="text-lg font-bold text-slate-800">Dashboard Report & Grafik Mapping Area</h2>
-          <span class="text-[11px] bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full">Publik / Live</span>
+          <span class="text-[11px] bg-amber-100 text-amber-900 font-semibold px-2.5 py-0.5 rounded-full">Mode Admin Terbuka</span>
         </div>
-        <p class="text-xs text-slate-500 mt-0.5">Rekapitulasi seluruh ID Cabang yang dapat diakses kapan saja melalui link halaman ini.</p>
+        <p class="text-xs text-slate-500 mt-0.5">Rekapitulasi seluruh ID Cabang dari Google Spreadsheet.</p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <button onclick="copyShareLink()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-semibold px-3 py-2 rounded-lg transition">
-          Salin Link Halaman Report
-        </button>
         <button onclick="copySummaryText()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-3 py-2 rounded-lg transition">
           Copy Teks Report (WA)
         </button>
@@ -317,51 +330,97 @@
 
   <script>
     // =========================================================================
-    // KONFIGURASI URL GOOGLE APPS SCRIPT WEB APP
+    // KONFIGURASI URL GOOGLE APPS SCRIPT & PASSWORD REPORT
     // =========================================================================
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmA4gmoO3D_lV0ZJ_dR5j5FbC8JJd8AQJtvkHvW1JiMV3nzHJ-iYF1KzYHBPUHyl1xow/exec";
     const LOCAL_STORAGE_KEY = "ksp_subzip_records_v2";
+    const REPORT_PASSWORD = "sehati1234";
+    const AUTH_SESSION_KEY = "ksp_report_unlocked";
 
     let allRecords = [];
     let barChartInstance = null;
     let doughnutChartInstance = null;
 
-    // Navigasi antar Page (Input vs Report) menggunakan URL Hash
+    // Cek apakah sesi sudah terautentikasi
+    function isReportUnlocked() {
+      return sessionStorage.getItem(AUTH_SESSION_KEY) === "true";
+    }
+
+    // Buka modal password jika belum terautentikasi
+    function openReportAuth() {
+      if (isReportUnlocked()) {
+        switchPage("report");
+        return;
+      }
+      document.getElementById("passwordErrorMsg").classList.add("hidden");
+      document.getElementById("reportPasswordInput").value = "";
+      document.getElementById("passwordModal").classList.remove("hidden");
+      setTimeout(() => document.getElementById("reportPasswordInput").focus(), 100);
+    }
+
+    function closePasswordModal() {
+      document.getElementById("passwordModal").classList.add("hidden");
+      if (window.location.hash === "#report" && !isReportUnlocked()) {
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    }
+
+    function verifyReportPassword(e) {
+      e.preventDefault();
+      const inputVal = document.getElementById("reportPasswordInput").value;
+      if (inputVal === REPORT_PASSWORD) {
+        sessionStorage.setItem(AUTH_SESSION_KEY, "true");
+        document.getElementById("passwordModal").classList.add("hidden");
+        switchPage("report");
+      } else {
+        document.getElementById("passwordErrorMsg").classList.remove("hidden");
+        document.getElementById("reportPasswordInput").value = "";
+        document.getElementById("reportPasswordInput").focus();
+      }
+    }
+
+    // Kunci ulang report dan kembali ke form input
+    function lockAndBackToInput() {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      switchPage("input");
+    }
+
+    // Navigasi antar Page (Input vs Report terproteksi)
     function switchPage(pageName) {
       const pageInput = document.getElementById("page-input");
       const pageReport = document.getElementById("page-report");
-      const tabInput = document.getElementById("tab-input");
-      const tabReport = document.getElementById("tab-report");
+      const btnAdminReport = document.getElementById("btnAdminReport");
+      const btnBackToInput = document.getElementById("btnBackToInput");
 
       if (pageName === "report") {
+        if (!isReportUnlocked()) {
+          openReportAuth();
+          return;
+        }
         pageInput.classList.add("hidden");
         pageReport.classList.remove("hidden");
-
-        tabReport.classList.remove("nav-inactive");
-        tabReport.classList.add("nav-active");
-        tabInput.classList.remove("nav-active");
-        tabInput.classList.add("nav-inactive");
+        btnAdminReport.classList.add("hidden");
+        btnBackToInput.classList.remove("hidden");
 
         window.location.hash = "report";
         renderDashboard();
       } else {
         pageReport.classList.add("hidden");
         pageInput.classList.remove("hidden");
+        btnBackToInput.classList.add("hidden");
+        btnAdminReport.classList.remove("hidden");
 
-        tabInput.classList.remove("nav-inactive");
-        tabInput.classList.add("nav-active");
-        tabReport.classList.remove("nav-active");
-        tabReport.classList.add("nav-inactive");
-
-        window.location.hash = "input";
+        if (window.location.hash === "#report") {
+          history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    // Deteksi hash URL saat halaman pertama kali dibuka
+    // Deteksi perubahan hash URL
     window.addEventListener("hashchange", () => {
       if (window.location.hash === "#report") {
-        switchPage("report");
+        openReportAuth();
       } else {
         switchPage("input");
       }
@@ -407,7 +466,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       loadFromLocal();
       if (window.location.hash === "#report") {
-        switchPage("report");
+        openReportAuth();
       } else {
         switchPage("input");
       }
@@ -430,7 +489,7 @@
       }
     }
 
-    // Ambil data live dari Google Sheets agar semua orang melihat report yang sama
+    // Ambil data live dari Google Sheets
     async function fetchDataFromSheet() {
       const statusEl = document.getElementById("syncStatus");
       if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_URL")) {
@@ -450,7 +509,7 @@
             const dusunRwSeharusnya = String(
               item["No Dusun / No RW Seharusnya"] || item["Subzip Seharusnya"] || ""
             ).replace(/^'/, "").toUpperCase();
-            const isLoncat = item["Milik Cabang Lain"] === "Ya" || item["Jenis Pengajuan"] === "LONCAT_CABANG";
+            const isLoncat = item["Jenis Pengajuan"] === "LONCAT_CABANG" || item["Milik Cabang Lain"] === "Ya";
             return {
               timestamp: item["Timestamp"] || "",
               id_cabang: (item["ID Cabang"] || item["Nama Cabang"] || "").toUpperCase(),
@@ -498,7 +557,7 @@
       const newRecord = {
         timestamp: new Date().toLocaleString("id-ID"),
         id_cabang: idCabangVal,
-        nama_cabang: idCabangVal, // Kompatibilitas dengan kolom Apps Script yang ada
+        nama_cabang: idCabangVal,
         nomor_order: document.getElementById("nomor_order").value.trim().toUpperCase(),
         nama_calon_anggota: document.getElementById("nama_calon_anggota").value.trim().toUpperCase(),
         zipcode: document.getElementById("zipcode").value.trim(),
@@ -506,7 +565,7 @@
         subzip: document.getElementById("subzip").value.trim(),
         subzip_seharusnya: document.getElementById("subzip_seharusnya").value.trim().toUpperCase(),
         loncat_cabang: isLoncat,
-        milik_cabang_lain: isLoncat, // Kompatibilitas dengan kolom Apps Script yang ada
+        milik_cabang_lain: isLoncat,
         cabang_pemilik_seharusnya: cabangTujuanVal
       };
 
@@ -543,12 +602,10 @@
       const internalCount = filteredData.filter(d => !d.loncat_cabang).length;
       const crossCount = filteredData.filter(d => d.loncat_cabang).length;
 
-      // Update KPI Cards
       document.getElementById("kpiTotal").textContent = filteredData.length;
       document.getElementById("kpiInternal").textContent = internalCount;
       document.getElementById("kpiCross").textContent = crossCount;
 
-      // 1. Bar Chart per ID Cabang
       const labels = Object.values(groupedData).map(g => `ID: ${g.id_cabang}`);
       const dataInternal = Object.values(groupedData).map(g => g.internalCount);
       const dataCross = Object.values(groupedData).map(g => g.crossCount);
@@ -588,7 +645,6 @@
         }
       });
 
-      // 2. Doughnut Chart Proporsi
       const ctxDoughnut = document.getElementById("doughnutChartStatus").getContext("2d");
       if (doughnutChartInstance) doughnutChartInstance.destroy();
 
@@ -617,6 +673,8 @@
     function renderDashboard() {
       document.getElementById("badgeTotalNav").textContent = allRecords.length;
 
+      if (!isReportUnlocked()) return;
+
       const keyword = (document.getElementById("filterSearch")?.value || "").toUpperCase();
       const statusFilter = document.getElementById("filterStatus")?.value || "ALL";
 
@@ -637,7 +695,6 @@
 
       document.getElementById("totalCount").textContent = filtered.length;
 
-      // Grouping berdasarkan ID Cabang
       const grouped = {};
       filtered.forEach(item => {
         const zipTarget = item.zipcode_seharusnya || item.zipcode;
@@ -665,12 +722,10 @@
         }
       });
 
-      // Update Grafik
       if (document.getElementById("barChartCabang")) {
         updateCharts(filtered, grouped);
       }
 
-      // Render Kartu Detail Report
       const reportContainer = document.getElementById("reportContainer");
       const groupKeys = Object.keys(grouped);
 
@@ -727,7 +782,6 @@
         }).join("");
       }
 
-      // Render Tabel Mentah
       const tbody = document.getElementById("rawTableBody");
       tbody.innerHTML = [...filtered].reverse().map(r => {
         const zipTarget = r.zipcode_seharusnya || r.zipcode;
@@ -755,15 +809,6 @@
           </td>
         </tr>
       `}).join("");
-    }
-
-    // Salin tautan langsung menuju halaman Report (#report)
-    function copyShareLink() {
-      const baseUrl = window.location.href.split("#")[0];
-      const reportUrl = baseUrl + "#report";
-      navigator.clipboard.writeText(reportUrl).then(() => {
-        alert("Link Halaman Report berhasil disalin:\n" + reportUrl);
-      });
     }
 
     // Salin ringkasan teks siap kirim ke WhatsApp
